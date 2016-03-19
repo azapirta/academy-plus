@@ -6,7 +6,7 @@
 /*   By: azapirta <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2016/03/10 13:13:49 by azapirta          #+#    #+#             */
-/*   Updated: 2016/03/16 16:06:51 by azapirta         ###   ########.fr       */
+/*   Updated: 2016/03/19 14:43:46 by azapirta         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,8 @@ typedef struct	s_mod
 	void		*win;
 	int			line_size;
 	t_map		**m2;
+	int			max_z;
+	int			min_z;
 	int			x;
 	int			y;
 }				t_mod;

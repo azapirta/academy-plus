@@ -6,15 +6,107 @@
 /*   By: azapirta <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2016/03/10 12:57:07 by azapirta          #+#    #+#             */
-/*   Updated: 2016/03/16 16:57:46 by azapirta         ###   ########.fr       */
+/*   Updated: 2016/03/19 16:30:37 by azapirta         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/fdf.h"
 
+void        control_height(t_mod *data)
+{
+	int     i;  
+	int     j;  
+	float   k;  
+
+	i = 0;
+	k = 0;
+	while (i < data->rows)
+	{   
+		j = 0;
+		while (j < data->columns)
+		{   
+			if (data->m2[i][j].z < 0)
+				k = data->m2[i][j].z * -1; 
+			else
+				k = data->m2[i][j].z;
+			if (k >= 40) 
+				data->m2[i][j].z /= 10; 
+			else if (k >= 20) 
+				data->m2[i][j].z /= 6;
+			else
+				data->m2[i][j].z /= 4;
+			j++;
+		}   
+		i++;
+	}   
+}
+
+void        modify_z(t_mod *data, int control)
+{
+	int i;
+	int j;
+
+	i = 0;
+	while (i < data->rows)
+	{   
+		j = 0;
+		while (j < data->columns)
+		{   
+			if (control == 1)
+				data->m2[i][j].z *= 2;
+			else if (control == -1) 
+				data->m2[i][j].z /= 2;
+			j++;
+		}   
+		i++;
+	}   
+}
+
+void	map_center(t_mod *data)
+{
+	int	i;
+	int	j;
+
+	i = 0;
+	while (i < data->rows)
+	{
+		j = 0;
+		while (j < data->columns)
+		{
+			data->m2[i][j].x -= (data->columns / 2);
+			data->m2[i][j].y -= (data->rows / 2);
+			j++;
+		}
+		i++;
+	}
+}
+
+//---------GET MIN/MAX COORDS---------
+
+void	get_min_max_z(t_mod *data)
+{
+	int	i;
+	int	j;
+
+	i = 0;
+	while (i < data->rows)
+	{
+		j = 0;
+		while (j < data->columns)
+		{
+			if (data->m2[i][j].z > data->max_z)
+				data->max_z = data->m2[i][j].z;
+			if (data->m2[i][j].z < data->min_z)
+				data->min_z = data->m2[i][j].z;
+			j++;
+		}
+		i++;
+	}
+}
+
 //---------GET INITIAL COORDS---------
 
-t_map		**get_initial_coords(t_mod *data)
+t_map	**get_initial_coords(t_mod *data)
 {
 	t_map	**tmp;
 	int		i;
@@ -35,12 +127,6 @@ t_map		**get_initial_coords(t_mod *data)
 		}
 		i++;
 	}
-	for (int i = 0; i < data->rows; i++)
-	{   
-		for (int j = 0; j < data->columns; j++)
-			printf("%.0f ", tmp[i][j].z);
-		printf("\n");
-	} 
 	return (tmp);
 }
 
@@ -87,7 +173,7 @@ void	draw_line_axis(t_mod *data, t_map v1, t_map v2)
 	float	x;
 	float	y;
 
-	step = 1 / fmax(fabs(v2.x - v1.x), fabs(v2.y - v1.y));
+	step = 1 / (fmax(fabs(v2.x - v1.x), fabs(v2.y - v1.y)));
 	t = 0;
 	while (t < 1)
 	{
@@ -119,27 +205,76 @@ void	draw_between_points(t_mod *data, t_map **matrix)
 	}
 }
 
+void    show_usage(t_mod *data)
+{
+	mlx_string_put(data->mlx, data->win, 10, 10, 0xFF0000, "Usage:");
+	mlx_string_put(data->mlx, data->win, 70, 10, 0xFF0000, \
+			"move the up and down arrows to change the color");
+	mlx_string_put(data->mlx, data->win, 10, 40, 0xFF0000, \
+			"Press ESC to close the program");
+}
+
+int     key_hook(int keycode, t_mod *data)
+{
+	if (keycode == 53) 
+	{   
+		mlx_destroy_window(data->mlx, data->win);
+		exit(0);
+	}   
+	else if (keycode == 126)
+	{   
+		modify_z(data, 1); 
+		draw_matrix(data);
+	}   
+	else if (keycode == 125)
+	{   
+		modify_z(data, -1);
+		draw_matrix(data);
+	}   
+	return (0);
+}
+
 //-------------DRAW MAP---------------
 
 void	init_struct(t_mod *data)
 {
 	data->rows = 0;
 	data->columns = 0;
+	data->max_z = 0;
+	data->min_z = 0;
 }
 
-void	draw_map(t_mod *data)
+void    draw_map(t_mod *data)
+{
+	data->mlx = mlx_init();
+	data->win = mlx_new_window(data->mlx, WIDTH, HEIGHT, "win");
+	mlx_expose_hook(data->win, draw_matrix, data);
+	mlx_key_hook(data->win, key_hook, data);
+	mlx_loop(data->mlx);
+	sleep(10);
+}
+
+void	draw(t_mod *data)
 {
 	int		i;
 	int		j;
 	t_map	**matrix;
 
-	data->mlx = mlx_init();
-	data->win = mlx_new_window(data->mlx, WIDTH, HEIGHT, "fdf");
-	get_size(data);
 	data->m2 = get_initial_coords(data);
+	get_min_max_z(data);
+	map_center(data);
+	control_height(data);
 	matrix = get_isometric_coords(data);
 	draw_between_points(data, matrix);
 	mlx_loop(data->mlx);
+}
+
+int		draw_matrix(t_mod *data)
+{
+	get_size(data);
+	draw(data);
+	show_usage(data);               
+	return (0);
 }
 
 //-----------ADD CONTENT--------------
@@ -251,6 +386,6 @@ int		main(int argc, char **argv)
 		return (0);
 	}
 	read_matrix(fd, &data);
-	draw_map(&data);
+	draw(&data);
 	close(fd);
 }
