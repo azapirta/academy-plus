@@ -6,15 +6,23 @@
 #    By: azapirta <marvin@42.fr>                    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2016/03/12 10:07:37 by azapirta          #+#    #+#              #
-#    Updated: 2016/03/12 10:11:49 by azapirta         ###   ########.fr        #
+#    Updated: 2016/03/31 16:20:55 by azapirta         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME = fdf
 
-SRC = srcs/*.c
+SRC =	srcs/draw_map.c \
+		srcs/main.c \
+		srcs/compute_projections.c \
+		srcs/get_coords.c \
+		srcs/read_matrix.c \
 
-OBJ = *.o
+OBJ =	draw_map.o \
+		main.o \
+		compute_projections.o \
+		get_coords.o \
+		read_matrix.o \
 
 FLAGS = -Wall -Wextra -Werror
 
